@@ -120,8 +120,8 @@ void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, s
 
     for(size_t i = 0; i < size; i++)
     {
-        input[i].l  = in[0][i] * .5f + in[2][i] * .5f;
-        input[i].r  = in[1][i] * .5f + in[3][i] * .5f;
+        input[i].l  = in[0][i];
+        input[i].r  = in[1][i];
         output[i].l = output[i].r = 0.f;
     }
 
@@ -129,8 +129,8 @@ void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, s
 
     for(size_t i = 0; i < size; i++)
     {
-        out[0][i] = out[2][i] = output[i].l;
-        out[1][i] = out[3][i] = output[i].r;
+        out[0][i] = output[i].l;
+        out[1][i] = output[i].r;
     }
 }
 
@@ -168,12 +168,18 @@ int main(void)
     display_config.driver_config.transport_config.pin_config.dc = DaisyPatchSM::D1;
     display_config.driver_config.transport_config.pin_config.reset = DaisyPatchSM::D8;
     display.Init(display_config);
+
+    display.SetCursor(0, 0);
+    display.Fill(false);
+    display.WriteString("Buttons", Font_7x10, true);
+    display.Update();
+
 	encoder.Init(hw.A8, hw.A9, hw.B7);
 	hw.SetAudioBlockSize(32); // number of samples handled per callback
 	hw.SetAudioSampleRate(SaiHandle::Config::SampleRate::SAI_48KHZ);
 	float sample_rate = hw.AudioSampleRate();
 
-// Set the desired refresh rate (e.g., 100 milliseconds)
+    // Set the desired refresh rate (e.g., 100 milliseconds)
     const float refreshInterval = 0.1f; // in seconds
     // Initialize last update time
     float lastUpdateTime = System::GetNow();
