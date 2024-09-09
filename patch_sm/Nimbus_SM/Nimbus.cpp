@@ -2,7 +2,6 @@
 #include "daisysp.h"
 #include "granular_processor.h"
 
-
 using namespace daisysp;
 using namespace daisy;
 using namespace patch_sm;
@@ -14,15 +13,12 @@ DaisyPatchSM              hw;
 uint8_t block_mem[118784];
 uint8_t block_ccm[65536 - 128];
 
-
 Parameters* parameters;
 
 void AudioCallback(AudioHandle::InputBuffer  in,
                    AudioHandle::OutputBuffer out,
                    size_t                    size)
 {
-
-
     FloatFrame input[size];
     FloatFrame output[size];
 
@@ -44,6 +40,7 @@ void AudioCallback(AudioHandle::InputBuffer  in,
 
 int main(void)
 {
+
     hw.Init();
     hw.SetAudioBlockSize(32); // clouds won't work with blocks bigger than 32
     float sample_rate = hw.AudioSampleRate();
