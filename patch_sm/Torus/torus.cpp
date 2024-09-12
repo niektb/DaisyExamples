@@ -313,6 +313,7 @@ void AudioCallback(AudioHandle::InputBuffer  in,
     PerformanceState performance_state;
     Patch            patch;
 
+
     ProcessControls(&patch, &performance_state);
     cv_scaler.Read(&patch, &performance_state, &calibration.cal);
 
@@ -350,6 +351,8 @@ void AudioCallback(AudioHandle::InputBuffer  in,
         out[0][i] = output[i];
         out[1][i] = aux[i];
     }
+    float cvthrough = hw.GetAdcValue(CV_5);
+    hw.WriteCvOut(1,cvthrough);
 }
 
 int main(void)
