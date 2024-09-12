@@ -63,7 +63,7 @@ void GranularProcessorClouds::Init(float  sample_rate,
 
     previous_playback_mode_ = PLAYBACK_MODE_LAST;
     reset_buffers_          = true;
-    dry_wet_                = 0.0f;
+    dry_wet_                = 0.5f;
 }
 
 void GranularProcessorClouds::ResetFilters()

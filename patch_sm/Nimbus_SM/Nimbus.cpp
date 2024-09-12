@@ -15,26 +15,32 @@ uint8_t block_ccm[65536 - 128];
 
 Parameters* parameters;
 
+
 void AudioCallback(AudioHandle::InputBuffer  in,
                    AudioHandle::OutputBuffer out,
                    size_t                    size)
 {
+
+    //float dryWet = hw.GetAdcValue(CV_1);
+    //parameters->dry_wet = dryWet;
+
     FloatFrame input[size];
     FloatFrame output[size];
 
     for(size_t i = 0; i < size; i++)
     {
-        input[i].l  = IN_L[i];
-        input[i].r  = IN_R[i];
+        input[i].l  = in[0][i];
+        input[i].r  = in[1][i];
         output[i].l = output[i].r = 0.f;
+        
     }
 
     processor.Process(input, output, size);
 
     for(size_t i = 0; i < size; i++)
     {
-        OUT_L[i] = output[i].l;
-        OUT_R[i] = output[i].r;
+        out[0][i] = output[i].l;
+        out[1][i] = output[i].r;
     }
 }
 
@@ -53,12 +59,20 @@ int main(void)
                    block_ccm,
                    sizeof(block_ccm));
 
-    parameters = processor.mutable_parameters();
-    processor.set_playback_mode(PLAYBACK_MODE_GRANULAR);
-	processor.set_quality(0);
+    //processor.set_bypass(false);
+    //processor.set_playback_mode(PLAYBACK_MODE_GRANULAR);
 
     hw.StartAdc();
     hw.StartAudio(AudioCallback);
+    if (processor.playback_mode() == PLAYBACK_MODE_GRANULAR)
+    {
+        float led = parameters->dry_wet;
+        hw.WriteCvOut(2,led*5);
+    }
+    else
+    {
+        hw.WriteCvOut(2,0);
+    }
     while(1)
     {
         processor.Prepare();        
