@@ -274,13 +274,6 @@ void GranularProcessorClouds::Process(FloatFrame* input,
         diffuser_.Process(out_, size);
     }
 
-    if(playback_mode_ == PLAYBACK_MODE_LOOPING_DELAY
-       && (!parameters_.freeze || looper_.synchronized()))
-    {
-        pitch_shifter_.set_ratio(SemitonesToRatio(parameters_.pitch));
-        pitch_shifter_.set_size(parameters_.size);
-        pitch_shifter_.Process(out_, size);
-    }
 
     // Apply filters.
     if(playback_mode_ == PLAYBACK_MODE_LOOPING_DELAY

@@ -8,6 +8,7 @@ using namespace patch_sm;
 
 GranularProcessorClouds processor;
 DaisyPatchSM              hw;
+Switch toggle;
 
 // Pre-allocate big blocks in main memory and CCM. No malloc here.
 uint8_t block_mem[118784];
@@ -15,14 +16,52 @@ uint8_t block_ccm[65536 - 128];
 
 Parameters* parameters;
 
+void controls()
+{
+    hw.ProcessAllControls();
+    toggle.Debounce();
+    bool shift  = toggle.Pressed();
+
+    if (shift == true)
+    {
+        hw.WriteCvOut(2,5);
+        
+        float posKnob = hw.GetAdcValue(CV_1);
+        parameters->position = posKnob;
+
+        float sizeKnob = hw.GetAdcValue(CV_2);
+        parameters->size = fmap(sizeKnob, 0.1f, 0.99f); //too small values for the size leads to crashes.
+
+        float densityKnob = hw.GetAdcValue(CV_3);
+        parameters->density = densityKnob;
+
+        float dryWetKnob = hw.GetAdcValue(CV_4);
+        parameters->dry_wet = dryWetKnob;
+    }
+    else if (shift == false)
+    {
+        hw.WriteCvOut(2,0);
+
+        float pitchKnob = hw.GetAdcValue(CV_1);
+        parameters->pitch = pitchKnob;
+
+        float panKnob = hw.GetAdcValue(CV_2);
+        parameters->stereo_spread = panKnob;
+
+        float textureknob = hw.GetAdcValue(CV_3);
+        parameters->texture = textureknob;
+
+        float revKnob = hw.GetAdcValue(CV_4);
+        parameters->reverb = revKnob;
+    }
+}
+
 
 void AudioCallback(AudioHandle::InputBuffer  in,
                    AudioHandle::OutputBuffer out,
                    size_t                    size)
 {
-
-    //float dryWet = hw.GetAdcValue(CV_1);
-    //parameters->dry_wet = dryWet;
+    controls();
 
     FloatFrame input[size];
     FloatFrame output[size];
@@ -44,10 +83,13 @@ void AudioCallback(AudioHandle::InputBuffer  in,
     }
 }
 
+
 int main(void)
 {
 
     hw.Init();
+    toggle.Init(hw.B8);
+
     hw.SetAudioBlockSize(32); // clouds won't work with blocks bigger than 32
     float sample_rate = hw.AudioSampleRate();
     //init the luts
@@ -59,22 +101,11 @@ int main(void)
                    block_ccm,
                    sizeof(block_ccm));
 
-    //processor.set_bypass(false);
-    //processor.set_playback_mode(PLAYBACK_MODE_GRANULAR);
-
+    parameters = processor.mutable_parameters();
     hw.StartAdc();
     hw.StartAudio(AudioCallback);
-    if (processor.playback_mode() == PLAYBACK_MODE_GRANULAR)
-    {
-        float led = parameters->dry_wet;
-        hw.WriteCvOut(2,led*5);
-    }
-    else
-    {
-        hw.WriteCvOut(2,0);
-    }
     while(1)
     {
-        processor.Prepare();        
+        processor.Prepare();
     }
 }
