@@ -351,8 +351,13 @@ void AudioCallback(AudioHandle::InputBuffer  in,
         out[0][i] = output[i];
         out[1][i] = aux[i];
     }
+
     float cvthrough = hw.GetAdcValue(CV_5);
     hw.WriteCvOut(1,cvthrough);
+
+    bool throughGate = hw.gate_in_1.State();
+    dsy_gpio_write(&hw.gate_out_1, throughGate);
+    dsy_gpio_write(&hw.gate_out_2, throughGate);
 }
 
 int main(void)
