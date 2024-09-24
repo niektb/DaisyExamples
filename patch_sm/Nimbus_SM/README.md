@@ -82,14 +82,14 @@ Ported from [pichenettes/eurorack](https://github.com/pichenettes/eurorack)
   </tr>
   <tr>
     <td>LED</td>
-    <td>Show selected Mode</td>
-    <td>Show selected Quality</td>
+    <td>Show selected quality</td>
+    <td>Show selected mode</td>
     <td>Indicated with brightness</td>
   </tr>
   <tr>
     <td>Button</td>
-    <td>Cycle through modes</td>
     <td>Cycle through qualities</td>
+    <td>Cycle through modes</td>
     <td></td>
   </tr>
   <tr>
