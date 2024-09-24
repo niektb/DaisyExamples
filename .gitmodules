@@ -8,3 +8,6 @@
 [submodule "libDaisy"]
 	path = libDaisy
 	url = https://github.com/electro-smith/libDaisy
+[submodule "patch_sm/PlaitsPatchInit"]
+	path = patch_sm/PlaitsPatchInit
+	url = https://github.com/hemmer/PlaitsPatchInit
