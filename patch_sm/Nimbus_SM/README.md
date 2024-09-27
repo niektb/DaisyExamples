@@ -2,7 +2,7 @@
 
 ## Author
 
-Ported by Ben Sergentanis
+Ported by Niek ten Brinke & Ben Sergentanis
 Originally by Emilie Gillet
 
 ## Description
@@ -13,13 +13,12 @@ audio processor, specializing in making huge clouds of sound from even the tinie
 Ported from [pichenettes/eurorack](https://github.com/pichenettes/eurorack)
 
 ## TODO list for the Patch SM Port:
-- Looks like CV now only works when SW is Up, fix this.
 - Implement soft takeover when toggling the switch
-- Think of something to control the stereo spread (now fixed to 100% stereo spread), perhaps holding down B7 while twisting a knob changes this
 - Check if V/Oct CV input tracks properly
 - Idea: Implement VU meter which is used to indicate input signal when the button has not been pressed for a while
 - Idea: Think of a function for CV1 Out (maybe Envelope Follower for Input Signal / VU meter)
 - Idea: use led blinking to indicate mode/quality for a better insight about selection (best implemented in conjunction with VU meter because a permanent quick blinking led is annoying)
+- Idea: PersistantStorage for Quality, Mode and the knobs that are not currently selected (by the toggle).
 
 ## Controls
 
@@ -58,7 +57,7 @@ Ported from [pichenettes/eurorack](https://github.com/pichenettes/eurorack)
     <td>CV_4</td>
     <td>Pitch</td>
     <td>Reverb</td>
-    <td></td>
+    <td>Hold button for >3sec to adjust stereo spread (while keeping button pressed)</td>
   </tr>
   <tr>
     <td>CV_5</td>
@@ -67,7 +66,7 @@ Ported from [pichenettes/eurorack](https://github.com/pichenettes/eurorack)
   </tr>
   <tr>
     <td>CV_6</td>
-    <td colspan="2">Dry/Wet CV Input</td>
+    <td colspan="2">Size CV Input</td>
     <td></td>
   </tr>
   <tr>
