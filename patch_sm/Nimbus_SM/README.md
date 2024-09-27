@@ -9,50 +9,112 @@ Originally by Emilie Gillet
 
 Nimbus is a port of Mutable Instrument's Clouds. Clouds is a granular  
 audio processor, specializing in making huge clouds of sound from even the tiniest source.  
-Nimbus includes a menu to allow the user to map any of the Daisy Patch's four controls to any of Clouds' parameters.  
 
 Ported from [pichenettes/eurorack](https://github.com/pichenettes/eurorack)
 
+## TODO list for the Patch SM Port:
+- Looks like CV now only works when SW is Up, fix this.
+- Implement soft takeover when toggling the switch
+- Think of something to control the stereo spread (now fixed to 100% stereo spread), perhaps holding down B7 while twisting a knob changes this
+- Check if V/Oct CV input tracks properly
+- Idea: Implement VU meter which is used to indicate input signal when the button has not been pressed for a while
+- Idea: Think of a function for CV1 Out (maybe Envelope Follower for Input Signal / VU meter)
+- Idea: use led blinking to indicate mode/quality for a better insight about selection (best implemented in conjunction with VU meter because a permanent quick blinking led is annoying)
+
 ## Controls
 
-| Control | Description | Comment |
-| --- | --- | --- |
-| Encoder Turn | Navigate through menu | |
-| Encoder Click | Select a menu item to edit | |
-| Encoder Long Press | Switch between pages one and two | |
-| Gate In 1 | Freeze Gate In | Activates Freeze if not already done via menu |
-| Audio In 1 | Left In 1 | All Audio Ins are a mix of In 1 and In 2 |
-| Audio In 2 | Right In 1 | |
-| Audio In 3 | Left In 2 | |
-| Audio In 4 | Right In 2 | |
-| Audio Out 1 | Left Out 1 | |
-| Audio Out 2 | Right Out 1 | |
-| Audio Out 3 | Left Out 2 | Copy of Out 1 |
-| Audio Out 4 | Right Out 2 | Copy of Out 1 |
-
-## Menu
-You can toggle between pages one and two by long pressing on the encoder.
-
-### Page One
-This page allows you to assign one Nimbus parameter to each control on the Patch.  
-These options are:
-- position
-- size
-- pitch
-- density
-- texture
-- dry/wet
-- stereo spread
-- feedback
-- reverb
+<table><thead>
+  <tr>
+    <th>Control</th>
+    <th colspan="2">Description</th>
+    <th>Comment</th>
+  </tr></thead>
+<tbody>
+  <tr>
+    <td>Toggle Switch</td>
+    <td>Switch Up</td>
+    <td>Switch Down</td>
+    <td>Toggling changes function of pots and button</td>
+  </tr>
+  <tr>
+    <td>CV_1</td>
+    <td>Position</td>
+    <td>Texture</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>CV_2</td>
+    <td>Size</td>
+    <td>Dry/Wet</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>CV_3</td>
+    <td>Density</td>
+    <td>Feedback</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>CV_4</td>
+    <td>Pitch</td>
+    <td>Reverb</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>CV_5</td>
+    <td colspan="2">Position CV Input</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>CV_6</td>
+    <td colspan="2">Dry/Wet CV Input</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>CV_7</td>
+    <td colspan="2">Density CV Input</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>CV_8</td>
+    <td colspan="2">Pitch CV Input (V/Oct)</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>LED</td>
+    <td>Show selected quality</td>
+    <td>Show selected mode</td>
+    <td>Indicated with brightness</td>
+  </tr>
+  <tr>
+    <td>Button</td>
+    <td>Cycle through qualities</td>
+    <td>Cycle through modes</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>Gate In 1</td>
+    <td colspan="2">Freeze Gate In</td>
+    <td>Activates Freeze</td>
+  </tr>
+  <tr>
+    <td>Gate In 2</td>
+    <td colspan="2">Trigger In</td>
+    <td>Triggers a Seed</td>
+  </tr>
+  <tr>
+    <td>Gate Out x</td>
+    <td colspan="2">Gate In x Through</td>
+    <td>Both Gate Inputs are fed to outputs</td>
+  </tr>
+  <tr>
+    <td>Audio In / Out 1 &amp; 2</td>
+    <td colspan="2">1 = Left, 2 = Right</td>
+    <td>Stereo in, stereo out</td>
+  </tr>
+</tbody></table>
 
 Refer to the [Clouds Manual](https://mutable-instruments.net/modules/clouds/manual/) for more information on these controls.
-
-### Page Two
-#### Freeze
-Freeze can be forced on using the menu control. To do so, click freeze, and turn the encoder once. A box will be drawn around freeze. To turn freeze off, select freeze and turn the encoder again.  
-
-Freeze can also be turned on using Gate In 1. This will turn Freeze on (if it isn't already) for the duration the gate is high. The box will also be drawn when Freeze is turned on via the gate.
 
 #### Mode
 You can select from Nimbus' four alternate modes here. These are:
