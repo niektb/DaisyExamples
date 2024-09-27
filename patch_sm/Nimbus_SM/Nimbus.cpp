@@ -6,6 +6,8 @@ using namespace daisysp;
 using namespace daisy;
 using namespace patch_sm;
 
+#define DEBUG
+
 GranularProcessorClouds processor;
 DaisyPatchSM              hw;
 Switch toggle, mode_button;
@@ -23,6 +25,15 @@ float IndexToBrightness(int index, int total)
 {
     return static_cast<float>(index + 1) / static_cast<float>(total);
 }
+
+bool mode_button_held = false;
+
+// These variables keep track of last button press, used to determine a timeout for the VU Meter to take control of the LED.
+float toggle_rising_edge_time = 0;
+float button_rising_edge_time = 0;
+
+bool waitForTimeout = true;
+
 
 void controls()
 {
@@ -42,14 +53,64 @@ void controls()
     dsy_gpio_write(&hw.gate_out_1, freezeGate);
     dsy_gpio_write(&hw.gate_out_2, Gate);
 
-    if (shift == true)
+    bool toggle_rising_edge = toggle.RisingEdge();
+    bool toggle_falling_edge = toggle.FallingEdge();
+
+    bool button_rising_edge = mode_button.RisingEdge();
+    bool button_falling_edge = mode_button.FallingEdge();
+
+#ifdef DEBUG
+    if (toggle_rising_edge){
+        hw.PrintLine("toggle RisingEdge.");
+    }
+
+    if(toggle_falling_edge) {
+        //shift_rising_edge_time = System::GetNow();
+        hw.PrintLine("toggle FallingEdge.");
+    }
+
+    if (button_rising_edge){
+        hw.PrintLine("mode_button RisingEdge.");
+    }
+
+    if (button_falling_edge && mode_button_held) {
+        hw.PrintLine("mode_button held and released.");
+    }
+
+    if (button_falling_edge && !mode_button_held) {
+        hw.PrintLine("mode_button FallingEdge.");
+    }
+
+    if (mode_button.TimeHeldMs() >= 3000 && !mode_button_held) {
+        hw.PrintLine("mode_button held.");
+    }
+
+    if ((System::GetNow() - toggle_rising_edge_time > 10000) && (System::GetNow() - button_rising_edge_time > 10000) && waitForTimeout) {
+        hw.PrintLine("LED Timeout.");
+    }
+#endif
+
+    // These variables keep track of last button press (i.e. User Input), used to determine a timeout for the VU Meter to take control of the LED.
+    if (toggle_rising_edge) {
+        toggle_rising_edge_time = System::GetNow();
+    }
+
+    if (button_rising_edge){
+        button_rising_edge_time = System::GetNow();
+    }
+
+    // determine wether the button is held. Since TimeHeldMs() is immediately reset upon button release, we set a flag to keep track of this. Resetting happens below.
+    if (mode_button.TimeHeldMs() >= 3000 && !mode_button_held) {
+        mode_button_held = true;
+    }
+
+    if (shift)
     {   
-        if (mode_button.RisingEdge())
-        {
+        if (button_falling_edge && !mode_button_held) {
             quality = (quality + 1) %4;
             processor.set_quality((GrainQuality)quality);
-            led_brightness = IndexToBrightness(quality, 4);
         }
+        led_brightness = IndexToBrightness(quality, 4);
 
         float posKnob = hw.GetAdcValue(CV_1);
         float posCV = hw.GetAdcValue(CV_5);
@@ -68,14 +129,13 @@ void controls()
         parameters->pitch = powf(9.798f * (val - .5f), 2.f);
         parameters->pitch *= val < .5f ? -1.f : 1.f;
     }
-    else if (shift == false)
+    else //if (shift == false)
     {
-        if (mode_button.RisingEdge())
-        {
+        if (button_falling_edge && !mode_button_held) {
             pbmode = (pbmode + 1) % 4;
             processor.set_playback_mode((PlaybackMode)pbmode);
-            led_brightness = IndexToBrightness(pbmode, 4);
         }
+        led_brightness = IndexToBrightness(pbmode, 4);
 
         float textureknob = hw.GetAdcValue(CV_1);
         parameters->texture = DSY_CLAMP(textureknob, 0, 1);
@@ -87,12 +147,37 @@ void controls()
         float feedbackKnob = hw.GetAdcValue(CV_3);
         parameters->feedback = DSY_CLAMP(feedbackKnob, 0.01f, 1.f);
 
-        float revKnob = hw.GetAdcValue(CV_4);
-        parameters->reverb = DSY_CLAMP(revKnob, 0, 1);
-
-        parameters->stereo_spread = 1.0f; // not mapped, preset to a max spread
+        // if we're holding down the button with shift in off position, we'll be adjusting Stereo Spread
+        if (mode_button_held) {
+            float spreadKnob = hw.GetAdcValue(CV_4);
+            parameters->stereo_spread = DSY_CLAMP(spreadKnob, 0, 1); // not mapped, preset to a max spread
+        } else {
+            float revKnob = hw.GetAdcValue(CV_4);
+            parameters->reverb = DSY_CLAMP(revKnob, 0, 1);
+        }
     }
+
+    if ((System::GetNow() - toggle_rising_edge_time > 10000) && (System::GetNow() - button_rising_edge_time > 10000) && waitForTimeout) {
+        waitForTimeout = false;
+    } else if (((System::GetNow() - toggle_rising_edge_time <= 10000) || (System::GetNow() - button_rising_edge_time <= 10000)) && !waitForTimeout) {
+        // means user input has happened, so we wait for timeout again
+        waitForTimeout = true;
+    }
+
+    if (mode_button_held) {
+        // Flash the LED to indicate that the easter egg mode will toggle.
+        led_brightness = (System::GetNow() & 255) > 127 ? 1.f : 0.f;
+    } else if (!waitForTimeout) {
+        led_brightness = 0;
+    } else {
+    }
+
     hw.WriteCvOut(CV_OUT_2, led_brightness * 5.f);
+
+    // resetting flags here because otherwise the checks inside the if(shift) body never return true
+    if (button_falling_edge && mode_button_held) {
+        mode_button_held = false;
+    }
 }
 
 void AudioCallback(AudioHandle::InputBuffer  in,
@@ -126,6 +211,12 @@ int main(void)
 {
 
     hw.Init();
+
+#ifdef DEBUG
+    hw.StartLog(true);
+    hw.PrintLine("Nimbus SM started.");
+#endif
+
     float sample_rate = hw.AudioSampleRate();
     toggle.Init(hw.B8);
     mode_button.Init(hw.B7,
@@ -155,6 +246,9 @@ int main(void)
     parameters->size = .5f;
     parameters->reverb = .0f;
     parameters->position = .5f;
+
+    toggle_rising_edge_time = System::GetNow();
+    button_rising_edge_time = System::GetNow();
 
     hw.StartAdc();
     hw.StartAudio(AudioCallback);
