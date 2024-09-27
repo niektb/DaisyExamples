@@ -121,6 +121,7 @@ You can select from Nimbus' four alternate modes here. These are:
 - Pitch Shift / Time Stretch
 - Looping Delay
 - Spectral Processor
+  
 Refer to the [Clouds Manual](https://mutable-instruments.net/modules/clouds/manual/) section on "The Infamous Alternate Modes".  
 
 #### Quality
@@ -129,4 +130,5 @@ You can also select from four quality / mono stereo modes. These are:
 - 16 bit Mono
 - 8bit u-law Stereo
 - 8bit u-law Mono
+  
 Refer to the [Clouds Manual](https://mutable-instruments.net/modules/clouds/manual/) section on "Audio Quality".  
