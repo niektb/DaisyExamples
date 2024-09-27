@@ -6,7 +6,7 @@ using namespace daisysp;
 using namespace daisy;
 using namespace patch_sm;
 
-#define DEBUG
+//#define DEBUG
 
 GranularProcessorClouds processor;
 DaisyPatchSM              hw;
@@ -34,6 +34,73 @@ float button_rising_edge_time = 0;
 
 bool waitForTimeout = true;
 
+float posKnob;
+float posCV;
+float sizeKnob;
+float sizeCV;
+float densityKnob;
+float densityCV;
+float pitchKnob;
+float pitchCV;
+float textureknob;
+float dryWetKnob;
+float feedbackKnob;
+float spreadKnob;
+float revKnob;
+
+void defaultParam() {
+    // initialize to avoid big jumps when toggling B8 for the first time.
+    parameters->density = .5f;
+    parameters->feedback = .01f;
+    parameters->dry_wet = .5f;
+    parameters->texture = .5f;
+    parameters->pitch = .5f;
+    parameters->size = .5f;
+    parameters->reverb = .0f;
+    parameters->position = .5f;
+    parameters->stereo_spread = 1.f;
+}
+
+void updateParam(bool shift){
+    if (shift) {   
+        posKnob = hw.GetAdcValue(CV_1);
+        sizeKnob = hw.GetAdcValue(CV_2);
+        densityKnob = hw.GetAdcValue(CV_3);
+        pitchKnob = hw.GetAdcValue(CV_4);
+    }
+    else //if (shift == false)
+    {
+        textureknob = hw.GetAdcValue(CV_1);
+        parameters->texture = DSY_CLAMP(textureknob, 0, 1);
+
+        dryWetKnob = hw.GetAdcValue(CV_2);
+        parameters->dry_wet = DSY_CLAMP(dryWetKnob,0,1);
+
+        feedbackKnob = hw.GetAdcValue(CV_3);
+        parameters->feedback = DSY_CLAMP(feedbackKnob, 0.01f, 1.f);
+
+        // if we're holding down the button with shift in off position, we'll be adjusting Stereo Spread
+        if (mode_button_held) {
+            spreadKnob = hw.GetAdcValue(CV_4);
+            parameters->stereo_spread = DSY_CLAMP(spreadKnob, 0, 1); // not mapped, preset to a max spread
+        } else {
+            revKnob = hw.GetAdcValue(CV_4);
+            parameters->reverb = DSY_CLAMP(revKnob, 0, 1);
+        }
+    }
+
+    // always update CV and related Param
+    posCV = hw.GetAdcValue(CV_5);
+    parameters->position = DSY_CLAMP((posKnob + posCV),0,1);
+    sizeCV = hw.GetAdcValue(CV_6);
+    parameters->size = DSY_CLAMP(sizeKnob+sizeCV,0.01,1); //too small values for the size leads to crashes.
+    densityCV = hw.GetAdcValue(CV_7);
+    parameters->density = DSY_CLAMP((densityKnob + densityCV),0,1);
+    pitchCV = hw.GetAdcValue(CV_8);
+    float val = DSY_CLAMP((pitchKnob+pitchCV), 0, 1);
+    parameters->pitch = powf(9.798f * (val - .5f), 2.f);
+    parameters->pitch *= val < .5f ? -1.f : 1.f;
+}
 
 void controls()
 {
@@ -104,58 +171,21 @@ void controls()
         mode_button_held = true;
     }
 
-    if (shift)
-    {   
+    if (shift) {
         if (button_falling_edge && !mode_button_held) {
             quality = (quality + 1) %4;
             processor.set_quality((GrainQuality)quality);
         }
         led_brightness = IndexToBrightness(quality, 4);
-
-        float posKnob = hw.GetAdcValue(CV_1);
-        float posCV = hw.GetAdcValue(CV_5);
-        parameters->position = DSY_CLAMP((posKnob + posCV),0,1);
-
-        float sizeKnob = hw.GetAdcValue(CV_2);
-        parameters->size = DSY_CLAMP(sizeKnob,0.01,1); //too small values for the size leads to crashes.
-
-        float densityKnob = hw.GetAdcValue(CV_3);
-        float densityCV = hw.GetAdcValue(CV_7);
-        parameters->density = DSY_CLAMP((densityKnob + densityCV),0,1);
-
-        float pitchKnob = hw.GetAdcValue(CV_4);
-        float pitchCV = hw.GetAdcValue(CV_8);
-        float val = DSY_CLAMP((pitchKnob+pitchCV), 0, 1);
-        parameters->pitch = powf(9.798f * (val - .5f), 2.f);
-        parameters->pitch *= val < .5f ? -1.f : 1.f;
-    }
-    else //if (shift == false)
-    {
+    } else {
         if (button_falling_edge && !mode_button_held) {
             pbmode = (pbmode + 1) % 4;
             processor.set_playback_mode((PlaybackMode)pbmode);
         }
         led_brightness = IndexToBrightness(pbmode, 4);
-
-        float textureknob = hw.GetAdcValue(CV_1);
-        parameters->texture = DSY_CLAMP(textureknob, 0, 1);
-
-        float dryWetKnob = hw.GetAdcValue(CV_2);
-        float dryWetCV = hw.GetAdcValue(CV_6);
-        parameters->dry_wet = DSY_CLAMP((dryWetKnob + dryWetCV),0,1);
-
-        float feedbackKnob = hw.GetAdcValue(CV_3);
-        parameters->feedback = DSY_CLAMP(feedbackKnob, 0.01f, 1.f);
-
-        // if we're holding down the button with shift in off position, we'll be adjusting Stereo Spread
-        if (mode_button_held) {
-            float spreadKnob = hw.GetAdcValue(CV_4);
-            parameters->stereo_spread = DSY_CLAMP(spreadKnob, 0, 1); // not mapped, preset to a max spread
-        } else {
-            float revKnob = hw.GetAdcValue(CV_4);
-            parameters->reverb = DSY_CLAMP(revKnob, 0, 1);
-        }
     }
+
+    updateParam(shift);
 
     if ((System::GetNow() - toggle_rising_edge_time > 10000) && (System::GetNow() - button_rising_edge_time > 10000) && waitForTimeout) {
         waitForTimeout = false;
@@ -165,9 +195,10 @@ void controls()
     }
 
     if (mode_button_held) {
-        // Flash the LED to indicate that the easter egg mode will toggle.
+        // Flash the LED
         led_brightness = (System::GetNow() & 255) > 127 ? 1.f : 0.f;
     } else if (!waitForTimeout) {
+        // add level indicator here
         led_brightness = 0;
     } else {
     }
@@ -237,15 +268,8 @@ int main(void)
 
     parameters = processor.mutable_parameters();
 
-    // initialize to avoid big jumps when toggling B8 for the first time.
-    parameters->density = .5f;
-    parameters->feedback = .01f;
-    parameters->dry_wet = .5f;
-    parameters->texture = .5f;
-    parameters->pitch = .5f;
-    parameters->size = .5f;
-    parameters->reverb = .0f;
-    parameters->position = .5f;
+    defaultParam(); // initialize parameters
+    updateParam(toggle.Pressed()); // override with panel controls
 
     toggle_rising_edge_time = System::GetNow();
     button_rising_edge_time = System::GetNow();
