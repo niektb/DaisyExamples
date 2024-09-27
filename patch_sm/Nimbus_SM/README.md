@@ -56,8 +56,8 @@ Ported from [pichenettes/eurorack](https://github.com/pichenettes/eurorack)
   <tr>
     <td>CV_4</td>
     <td>Pitch</td>
-    <td>Reverb</td>
-    <td>Hold button for >3sec to adjust stereo spread (while keeping button pressed)</td>
+    <td>Reverb (Hold button for >3sec to adjust stereo spread)</td>
+    <td></td>
   </tr>
   <tr>
     <td>CV_5</td>
